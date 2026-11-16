@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Token Launch Radar — radar-3</title>
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<header>
+  <h1>Token Launch Radar</h1>
+  <p class="sub">Pre-token protocols, ranked by implied launch value. Model radar-3: power-law comparables blended with category medians, fitted on this snapshot alone.</p>
+  <p class="meta" id="meta"></p>
+  <nav>
+    <button data-view="board" class="active">Board</button>
+    <button data-view="live">Live tokens (for comparison)</button>
+    <button data-view="model">How the value is worked out</button>
+  </nav>
+</header>
+<main>
+  <section id="view-board">
+    <div class="controls">
+      <input id="q" type="search" placeholder="Search name or slug…" aria-label="Search">
+      <select id="cat" aria-label="Category"><option value="">All categories</option></select>
+      <label><input id="watchonly" type="checkbox"> Watchlist only</label>
+      <span id="count"></span>
+    </div>
+    <table id="board">
+      <thead><tr>
+        <th data-sort="rank">Rank</th><th data-sort="name">Protocol</th><th data-sort="category">Category</th>
+        <th data-sort="chains">Chains</th><th data-sort="tvl_usd">TVL</th><th data-sort="change_7d">7d</th>
+        <th data-sort="age_days">Age</th><th data-sort="implied_value_usd">Implied value</th>
+      </tr></thead>
+      <tbody></tbody>
+    </table>
+    <p class="hint">Click a row for its detail view and farm plan. Click a column header to sort.</p>
+    <article id="detail" hidden></article>
+  </section>
+  <section id="view-live" hidden>
+    <p>These protocols already have a token that trades, so the board shows the market's own value (market cap), never a model's guess. They are the comparables the model is calibrated on.</p>
+    <table id="livetab"><thead><tr><th>Protocol</th><th>Category</th><th>TVL</th><th>Market cap</th><th>FDV / TVL</th><th>7d</th></tr></thead><tbody></tbody></table>
+  </section>
+  <section id="view-model" hidden>
+    <h2>The model (radar-3)</h2>
+    <p>Implied value = TVL × blended multiple × growth × maturity × chain reach. Every input comes from the sealed snapshot dated <span id="asof"></span> (758 protocols, 40 on the watchlist). No protocol name is special-cased.</p>
+    <ul>
+      <li><b>Blended multiple:</b> 75% power-law fit log<sub>10</sub>(market cap) = a + b·log<sub>10</sub>(TVL) fitted on the snapshot's live-token protocols, blended in log space with 25% category median market-cap / TVL (same category, at least 3 live protocols; otherwise the overall median). Effective multiple clamped to 0.02–2.00.</li>
+      <li><b>Fitted values (this snapshot, 128 live-token protocols):</b> log<sub>10</sub>(market cap) = 3.025 + 0.522·log<sub>10</sub>(TVL), r = 0.44. The fit is recomputed from the snapshot on every run; nothing is hardcoded.</li>
+      <li><b>Backtest:</b> leave-one-out on the 128 live-token protocols, median |log<sub>10</sub> error| 0.566 vs 0.743 for the category median alone and 0.691 for a flat 0.25×TVL — see PLAN.md.</li>
+      <li><b>Growth:</b> 7-day TVL change clamped to −60%…+120%, weight 0.5.</li>
+      <li><b>Maturity:</b> 0.60 + min(age, 1095 days) / 1095 × 0.40; unknown age counts as 365 days.</li>
+      <li><b>Chain reach:</b> 1 + 0.02 per extra chain, capped at 1.10.</li>
+    </ul>
+    <h3>Category multiples used</h3>
+    <table id="mults"><thead><tr><th>Category</th><th>Multiple</th><th>Live protocols</th></tr></thead><tbody></tbody></table>
+    <p class="fine">An implied value is this entry's own claim about what a token would be worth if the protocol's record stayed as it is. It does not predict whether or when a token is issued.</p>
+  </section>
+</main>
+<footer><p>Data: sealed DefiLlama snapshot, 2026-11-14. Board: <span id="foot"></span></p></footer>
+<script src="../data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
